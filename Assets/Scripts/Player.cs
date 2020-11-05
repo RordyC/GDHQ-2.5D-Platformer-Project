@@ -141,4 +141,18 @@ public class Player : MonoBehaviour
         _movementState = MovementState.Default;
         _gravity = 9.81f;
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Elevator")
+        {
+            other.GetComponent<Elevator>().StartElevator();
+            transform.parent = other.transform;
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Elevator")
+            transform.parent = null;
+    }
 }
