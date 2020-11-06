@@ -6,6 +6,7 @@ TagManager:
   tags:
   - LedgeGrabChecker
   - Elevator
+  - Collectable
   layers:
   - Default
   - TransparentFX

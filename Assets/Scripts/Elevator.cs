@@ -73,6 +73,7 @@ public class Elevator : MonoBehaviour
             if (_elevatorStarted == false)
                 StartElevator();
             other.transform.parent = transform;
+
         }
     }
     private void OnTriggerExit(Collider other)

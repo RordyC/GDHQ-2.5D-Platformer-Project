@@ -144,15 +144,10 @@ public class Player : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Elevator")
+        if (other.tag == "Collectable")
         {
-            other.GetComponent<Elevator>().StartElevator();
-            transform.parent = other.transform;
+            Debug.Log("Collected collectable!");
+            Destroy(other.gameObject);
         }
-    }
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.tag == "Elevator")
-            transform.parent = null;
     }
 }
