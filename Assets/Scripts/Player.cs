@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private enum MovementState {Default,GrabbingLedge}
+    private enum MovementState {Default,GrabbingLedge, ClimbingLadder}
 
     [SerializeField]
     private MovementState _movementState = MovementState.Default;
@@ -14,6 +14,9 @@ public class Player : MonoBehaviour
 
     [SerializeField]
     private float _speed = 5f;
+
+    [SerializeField]
+    private float _climbSpeed = 2.5f;
 
     [SerializeField]
     private float _jumpHeight = 5f;
@@ -39,7 +42,16 @@ public class Player : MonoBehaviour
     private bool _grabbedLedge = false;
 
     [SerializeField]
+    private bool _climbedLadder = false;
+
+    [SerializeField]
     private Vector3 _grabPos;
+
+    [SerializeField]
+    private Vector3 _ladderClimbPos;
+
+    [SerializeField]
+    private float _maxYPos, _minYPos;
 
     // Start is called before the first frame update
     void Start()
@@ -70,6 +82,10 @@ public class Player : MonoBehaviour
         else if (_movementState == MovementState.Default)
         {
             CalculateMovement();
+        }
+        else if (_movementState == MovementState.ClimbingLadder)
+        {
+            CalculateLadderMovement();
         }
     }
 
@@ -123,6 +139,50 @@ public class Player : MonoBehaviour
         StartCoroutine(GrabLedgeRoutine(snapPos));
     }
 
+    private void CalculateLadderMovement()
+    {
+        if (_ladderClimbPos != Vector3.zero)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, _ladderClimbPos, (_climbSpeed/2) * Time.deltaTime);
+
+            if (transform.position == _ladderClimbPos)
+            {
+                _ladderClimbPos = Vector3.zero;
+            }
+            _playerAnimator.SetFloat("ClimbSpeed", 1);
+        }
+        else
+        {
+            float vertical = Input.GetAxis("Vertical");
+            if (transform.position.y >= _minYPos && transform.position.y <= _maxYPos)
+            {
+                Vector3 direction = new Vector3(0, vertical * _climbSpeed * Time.deltaTime, 0);
+                transform.position += direction;
+
+                if (transform.position.y > _maxYPos)
+                    transform.position = new Vector3(transform.position.x, _maxYPos, transform.position.z);
+
+                if (transform.position.y < _minYPos)
+                    transform.position = new Vector3(transform.position.x, _minYPos, transform.position.z);
+            }
+
+            if (transform.position.y > _minYPos && transform.position.y < _maxYPos)
+            {
+                _playerAnimator.SetFloat("ClimbSpeed", vertical);
+            }
+            else
+            {
+                _playerAnimator.SetFloat("ClimbSpeed", 0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.E) && _climbedLadder == false && transform.position.y == _maxYPos)
+            {
+                _playerAnimator.SetTrigger("ClimbLadder");
+                transform.position += new Vector3(0, 2, 0);
+                _climbedLadder = true;
+            }
+        }
+    }
     IEnumerator GrabLedgeRoutine(Vector3 snapPos)
     {
         _moveTowardsSpeed = 30f;
@@ -142,11 +202,41 @@ public class Player : MonoBehaviour
         _gravity = 9.81f;
     }
 
+    public void GrabbingLadder(float maxY, float minY)
+    {
+        if (_movementState == MovementState.ClimbingLadder || _direction.z < 0 || _controller.isGrounded == false || _playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Running Jump"))
+            return;
+
+        _playerAnimator.SetTrigger("GrabLadder");
+
+        _maxYPos = maxY;
+        _minYPos = minY;
+        _controller.enabled = false;
+
+        _ladderClimbPos = transform.position + new Vector3(0, 2.4f, 0);
+
+        _movementState = MovementState.ClimbingLadder;
+    }
+
+    public void GrabbedLadder()
+    {
+        transform.position -= new Vector3(0, 2.4f, 0);
+    }
+
+    public void FinishedClimbingLadder()
+    {
+        transform.position += new Vector3(0, 4.75f, 2.7f);
+        _climbedLadder = false;     
+        _playerAnimator.SetFloat("Speed", 0);
+        _controller.enabled = true;
+        _gravity = 9.81f;
+        _movementState = MovementState.Default;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.tag == "Collectable")
         {
-            Debug.Log("Collected collectable!");
             Destroy(other.gameObject);
         }
     }
