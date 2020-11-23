@@ -5,7 +5,7 @@ using UnityEngine;
 public class Moving_Platform : MonoBehaviour
 {
     [SerializeField]
-    private List<Transform> _positions;
+    private List<Transform> _positions = null;
 
     private Transform _targetPos;
 

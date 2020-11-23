@@ -10,7 +10,7 @@ public class LedgeGrabChecker : MonoBehaviour
     private Vector3 _handPos;
 
     [SerializeField]
-    private Transform _handPosition;
+    private Transform _handPosition = null;
 
     private void Start()
     {

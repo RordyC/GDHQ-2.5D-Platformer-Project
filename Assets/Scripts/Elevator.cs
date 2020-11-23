@@ -5,7 +5,7 @@ using UnityEngine;
 public class Elevator : MonoBehaviour
 {
     [SerializeField]
-    private Transform _pointA, _pointB;
+    private Transform _pointA = null, _pointB = null;
 
     [SerializeField]
     private float _speed = 5f;
