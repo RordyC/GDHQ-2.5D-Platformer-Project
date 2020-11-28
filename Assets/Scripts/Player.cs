@@ -101,8 +101,16 @@ public class Player : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                _playerAnimator.SetTrigger("Jump");
-                _direction.y += _jumpHeight;
+                if (_direction.z != 0)
+                {
+                    _playerAnimator.SetTrigger("RunningJump");
+                    _direction.y += _jumpHeight;
+                }
+                else
+                {
+                    _playerAnimator.SetTrigger("Jump");
+                    _direction.y += _jumpHeight;
+                }
             }
 
             Vector3 facing = _playerModel.transform.localEulerAngles;
