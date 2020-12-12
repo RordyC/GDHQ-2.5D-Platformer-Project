@@ -24,6 +24,12 @@ public class Player : MonoBehaviour
     [SerializeField]
     private Vector3 _direction;
 
+    [SerializeField]
+    private bool _rolling = false;
+
+    [SerializeField]
+    private float _rollDirection = 0;
+
     private CharacterController _controller;
 
     private Animator _playerAnimator;
@@ -71,6 +77,12 @@ public class Player : MonoBehaviour
             _playerAnimator.SetTrigger("Climb");
         }
 
+        if (Input.GetKeyDown(KeyCode.LeftShift) && _controller.isGrounded== true && _movementState == MovementState.Default && _rolling == false)
+        {
+            _playerAnimator.SetTrigger("Roll");
+            StartCoroutine(RollRoutine());
+        }
+
         if (_movementState == MovementState.GrabbingLedge && _grabPos != Vector3.zero)
         {
             transform.position = Vector3.MoveTowards(transform.position, _grabPos, Time.deltaTime * _moveTowardsSpeed);
@@ -95,6 +107,8 @@ public class Player : MonoBehaviour
         {
             //_controller.Move(Vector3.down * _gravity * Time.deltaTime);
             float horizontal = Input.GetAxis("Horizontal");
+            if (_rolling == true)
+                horizontal = _rollDirection;
 
             _direction = new Vector3(0, 0, horizontal);
             _playerAnimator.SetFloat("Speed", Mathf.Abs(horizontal));
@@ -191,6 +205,24 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    IEnumerator RollRoutine()
+    {
+        if (_playerModel.transform.rotation.y == 0)
+        {
+            _rollDirection = 1;
+        }
+        else
+        {
+            _rollDirection = -1;
+        }
+        yield return new WaitForSeconds(0.11f);
+        _rolling = true;
+        yield return new WaitForSeconds(1f);
+        _rollDirection = 0;
+        _rolling = false;
+    }
+
     IEnumerator GrabLedgeRoutine(Vector3 snapPos)
     {
         _moveTowardsSpeed = 30f;
@@ -212,8 +244,14 @@ public class Player : MonoBehaviour
 
     public void GrabbingLadder(float maxY, float minY)
     {
-        if (_movementState == MovementState.ClimbingLadder || _direction.z < 0 || _controller.isGrounded == false || _playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Running Jump"))
+        if (_movementState == MovementState.ClimbingLadder
+            || _direction.z < 0
+            || _controller.isGrounded == false
+            || _playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("Running Jump")
+            || _rolling == true)
+        {
             return;
+        }
 
         _playerAnimator.SetTrigger("GrabLadder");
 
